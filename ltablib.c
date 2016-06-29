@@ -19,6 +19,13 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+/* compatibility for older Lua versions */
+#include "compat-5.3/c-api/compat-5.3.h"
+#ifndef LUA_MAXINTEGER
+/* conservative estimate: */
+#define LUA_MAXINTEGER INT_MAX
+#endif
+
 
 /*
 ** Operations that an object must define to mimic a table

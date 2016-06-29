@@ -1,7 +1,7 @@
 package="table.n"
 version="scm-0"
 source = {
-  url = "git+https://github.com/siffiejoe/lua-table.n.git",
+  url = "gitrec+https://github.com/siffiejoe/lua-table.n.git",
 }
 description = {
   summary = "Clone of Lua's table library that uses '.n'",
@@ -18,7 +18,8 @@ description = {
   license = "MIT"
 }
 dependencies = {
-  "lua >= 5.3, < 5.4"
+  "lua >= 5.1, < 5.4",
+  "luarocks-fetch-gitrec",
 }
 build = {
   type = "builtin",
