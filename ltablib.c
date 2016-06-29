@@ -30,7 +30,33 @@
 #define TAB_RW	(TAB_R | TAB_W)		/* read/write */
 
 
-#define aux_getn(L,n,w)	(checktab(L, n, (w) | TAB_L), luaL_len(L, n))
+#define aux_getn(L,n,w)	(checktab(L, n, w), check_n(L, n))
+
+
+/*
+** Get the .n field and make sure that it is a valid length.
+** Return -1 if not.
+*/
+static lua_Integer get_n (lua_State *L, int n) {
+  lua_Integer len = 0;
+  int valid = 0;
+  lua_getfield(L, n, "n");
+  len = lua_tointegerx(L, -1, &valid);
+  lua_pop(L, 1);
+  if (!valid || len < 0)
+    len = -1;
+  return len;
+}
+
+/*
+** Get the .n field and make sure that it is a valid length.
+** Raise an argument error otherwise.
+*/
+static lua_Integer check_n (lua_State *L, int n) {
+  lua_Integer len = get_n(L, n);
+  luaL_argcheck(L, len >= 0, n, "no valid '.n'");
+  return len;
+}
 
 
 static int checkfield (lua_State *L, const char *key, int n) {
@@ -82,12 +108,16 @@ static int tinsert (lua_State *L) {
   switch (lua_gettop(L)) {
     case 2: {  /* called with only 2 arguments */
       pos = e;  /* insert new element at the end */
+      lua_pushinteger(L, e);
+      lua_setfield(L, 1, "n"); /* set new length */
       break;
     }
     case 3: {
       lua_Integer i;
       pos = luaL_checkinteger(L, 2);  /* 2nd argument is the position */
       luaL_argcheck(L, 1 <= pos && pos <= e, 2, "position out of bounds");
+      lua_pushinteger(L, e);
+      lua_setfield(L, 1, "n"); /* set new length */
       for (i = e; i > pos; i--) {  /* move up elements */
         lua_geti(L, 1, i - 1);
         lua_seti(L, 1, i);  /* t[i] = t[i - 1] */
@@ -115,6 +145,10 @@ static int tremove (lua_State *L) {
   }
   lua_pushnil(L);
   lua_seti(L, 1, pos);  /* t[pos] = nil */
+  if (pos > 0 && pos <= size) {
+    lua_pushinteger(L, size-1);
+    lua_setfield(L, 1, "n");
+  }
   return 1;
 }
 
@@ -134,11 +168,16 @@ static int tmove (lua_State *L) {
   checktab(L, tt, TAB_W);
   if (e >= f) {  /* otherwise, nothing to move */
     lua_Integer n, i;
+    lua_Integer size = get_n(L, tt);
     luaL_argcheck(L, f > 0 || e < LUA_MAXINTEGER + f, 3,
                   "too many elements to move");
     n = e - f + 1;  /* number of elements to move */
     luaL_argcheck(L, t <= LUA_MAXINTEGER - n + 1, 4,
                   "destination wrap around");
+    if (size >= 0 && t+n-1 > size) {
+      lua_pushinteger(L, t+n-1);
+      lua_setfield(L, tt, "n" );
+    }
     if (t > e || t <= f || (tt != 1 && !lua_compare(L, 1, tt, LUA_OPEQ))) {
       for (i = 0; i < n; i++) {
         lua_geti(L, 1, f + i);
@@ -168,11 +207,13 @@ static void addfield (lua_State *L, luaL_Buffer *b, lua_Integer i) {
 
 static int tconcat (lua_State *L) {
   luaL_Buffer b;
-  lua_Integer last = aux_getn(L, 1, TAB_R);
+  lua_Integer i, last;
   size_t lsep;
-  const char *sep = luaL_optlstring(L, 2, "", &lsep);
-  lua_Integer i = luaL_optinteger(L, 3, 1);
-  last = luaL_optinteger(L, 4, last);
+  const char *sep;
+  checktab(L, 1, TAB_R);
+  sep = luaL_optlstring(L, 2, "", &lsep);
+  i = luaL_optinteger(L, 3, 1);
+  last = luaL_opt(L, luaL_checkinteger, 4, check_n(L, 1));
   luaL_buffinit(L, &b);
   for (; i < last; i++) {
     addfield(L, &b, i);
@@ -207,7 +248,7 @@ static int pack (lua_State *L) {
 static int unpack (lua_State *L) {
   lua_Unsigned n;
   lua_Integer i = luaL_optinteger(L, 2, 1);
-  lua_Integer e = luaL_opt(L, luaL_checkinteger, 3, luaL_len(L, 1));
+  lua_Integer e = luaL_opt(L, luaL_checkinteger, 3, aux_getn(L, 1, TAB_R));
   if (i > e) return 0;  /* empty range */
   n = (lua_Unsigned)e - i;  /* number of elements minus 1 (avoid overflows) */
   if (n >= (unsigned int)INT_MAX  || !lua_checkstack(L, (int)(++n)))
@@ -286,7 +327,9 @@ static void set2 (lua_State *L, IdxT i, IdxT j) {
 */
 static int sort_comp (lua_State *L, int a, int b) {
   if (lua_isnil(L, 2))  /* no function? */
-    return lua_compare(L, a, b, LUA_OPLT);  /* a < b */
+    return (!lua_isnil(L, a)) &&
+           (lua_isnil(L, b) ||
+            lua_compare(L, a, b, LUA_OPLT));  /* a < b */
   else {  /* function */
     int res;
     lua_pushvalue(L, 2);    /* push function */
@@ -438,13 +481,16 @@ static const luaL_Reg tab_funcs[] = {
 };
 
 
-LUAMOD_API int luaopen_table (lua_State *L) {
-  luaL_newlib(L, tab_funcs);
-#if defined(LUA_COMPAT_UNPACK)
-  /* _G.unpack = table.unpack */
-  lua_getfield(L, -1, "unpack");
-  lua_setglobal(L, "unpack");
+#ifndef TABLE_N_API
+#ifdef _WIN32
+#define TABLE_N_API __declspec(dllexport)
+#else
+#define TABLE_N_API
 #endif
+#endif
+
+TABLE_N_API int luaopen_table_n (lua_State *L) {
+  luaL_newlib(L, tab_funcs);
   return 1;
 }
 
