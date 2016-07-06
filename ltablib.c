@@ -55,6 +55,7 @@ static lua_Integer get_n (lua_State *L, int n) {
   return len;
 }
 
+
 /*
 ** Get the .n field and make sure that it is a valid length.
 ** Raise an argument error otherwise.
@@ -474,6 +475,12 @@ static int sort (lua_State *L) {
 
 
 
+/*
+** {======================================================
+** Extensions to the official table library
+** =======================================================
+*/
+
 static int treplace(lua_State *L) {
   lua_Integer len, tpos, start, end, start2, end2, i;
   len = aux_getn(L, 1, TAB_RW);
@@ -542,6 +549,64 @@ static int treplace(lua_State *L) {
 }
 
 
+static void check_callable(lua_State *L, int idx) {
+  int c = 0;
+  switch (lua_type(L, idx)) {
+    case LUA_TFUNCTION:
+      c = 1;
+      break;
+    case LUA_TUSERDATA: /* fall through */
+    case LUA_TTABLE:
+      if (luaL_getmetafield(L, idx, "__call")) {
+        lua_pop(L, 1);
+        c = 1;
+      }
+      break;
+  }
+  luaL_argcheck(L, c, idx, "callable value expected");
+}
+
+
+LUA_KFUNCTION(tmapk) {
+  int nx = 0, i = 1, j = 1, len;
+  (void)status;
+  switch (ctx) {
+    case 0:
+      check_callable(L, 1);
+      len = aux_getn(L, 2, TAB_R);
+      nx = lua_gettop(L)-2;
+      lua_pushinteger(L, 1); /* store current iteration index */
+      lua_pushinteger(L, len); /* store length on stack */
+      lua_createtable(L, len, 1); /* result table */
+      lua_pushinteger(L, len);
+      lua_setfield(L, -2, "n"); /* ... with an 'n' field */
+      luaL_checkstack(L, nx+2+LUA_MINSTACK, "map");
+      while (i <= len) { /* func, array, x_1, ..., x_n, i, len, res */
+        lua_pushvalue(L, 1);
+        lua_pushvalue(L, -4);
+        lua_gettable(L, 2);
+        for (j = 3; j <= nx+2; ++j)
+          lua_pushvalue(L, j);
+        lua_callk(L, nx+1, 1, 1, tmapk);
+    case 1: /* func, array, x_1, ..., x_n, i, len, res, v */
+        nx = lua_gettop(L)-6;
+        i = lua_tointeger(L, nx+3);
+        len = lua_tointeger(L, nx+4);
+        lua_rawseti(L, nx+5, i);
+        lua_pushinteger(L, ++i);
+        lua_replace(L, nx+3); /* update i */
+      }
+  }
+  return 1;
+}
+
+static int tmap (lua_State *L) {
+  return tmapk(L, 0, 0);
+}
+
+/* }====================================================== */
+
+
 
 static const luaL_Reg tab_funcs[] = {
   {"concat", tconcat},
@@ -555,6 +620,7 @@ static const luaL_Reg tab_funcs[] = {
   {"move", tmove},
   {"sort", sort},
   {"replace", treplace},
+  {"map", tmap},
   {NULL, NULL}
 };
 

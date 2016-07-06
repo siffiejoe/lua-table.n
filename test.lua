@@ -30,6 +30,8 @@ print( pcall( table.replace, {1,2,3,n=3}, 5, {"a","b","c"} ) )
 print( pcall( table.replace, true ) )
 print( pcall( table.replace, {1,2,3,n=3}, true, {"a","b",n=2} ) )
 print( pcall( table.replace, {1,2,3,n=3}, {"a","b",n=2}, true ) )
+print( pcall( table.map, {}, {} ) )
+print( pcall( table.map, type, {} ) )
 
 
 print( "table.unpack() ..." )
@@ -104,4 +106,12 @@ p( table.replace( t3, 2, 1, t1, 1, 1 ) )
 p( table.replace( t4, 1, 1, t1, 1, 0 ) )
 p( table.replace( t5, 3, {"a","b",n=2} ) )
 reset()
+
+
+print( "table.map() ..." )
+p( table.map( type, t3 ) )
+p( table.map( type, t4 ) )
+p( table.map( type, t5 ) )
+local function add( a, b ) return a+b end
+p( table.map( add, {1,2,3,4,n=3}, 3 ) )
 
