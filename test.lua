@@ -32,6 +32,8 @@ print( pcall( table.replace, {1,2,3,n=3}, true, {"a","b",n=2} ) )
 print( pcall( table.replace, {1,2,3,n=3}, {"a","b",n=2}, true ) )
 print( pcall( table.map, {}, {} ) )
 print( pcall( table.map, type, {} ) )
+print( pcall( table.filter, {}, {} ) )
+print( pcall( table.filter, type, {} ) )
 
 
 print( "table.unpack() ..." )
@@ -114,4 +116,18 @@ p( table.map( type, t4 ) )
 p( table.map( type, t5 ) )
 local function add( a, b ) return a+b end
 p( table.map( add, {1,2,3,4,n=3}, 3 ) )
+
+
+print( "table.filter() ..." )
+local function is_nil( v )
+  return v == nil
+end
+local function is_not( v, w )
+  return v ~= w
+end
+p( table.filter( is_nil, t3 ) )
+p( table.filter( is_not, t3, nil ) )
+p( table.filter( is_nil, t5 ) )
+p( table.filter( is_not, t5, nil ) )
+p( table.filter( is_not, t5, 3 ) )
 
