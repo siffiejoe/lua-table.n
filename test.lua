@@ -13,6 +13,10 @@ local function reset()
 end
 reset()
 
+local function p( t, ... )
+  print( table.unpack( t, ... ) )
+end
+
 
 print( "those should all fail:" )
 print( pcall( table.concat, t1 ) )
@@ -20,6 +24,20 @@ print( pcall( table.insert, t1, 1 ) )
 print( pcall( table.remove, t1 ) )
 print( pcall( table.sort, t1 ) )
 print( pcall( table.unpack, t1 ) )
+print( pcall( table.replace, t1, {} ) )
+print( pcall( table.replace, t2, {} ) )
+print( pcall( table.replace, {1,2,3,n=3}, 5, {"a","b","c"} ) )
+print( pcall( table.replace, true ) )
+print( pcall( table.replace, {1,2,3,n=3}, true, {"a","b",n=2} ) )
+print( pcall( table.replace, {1,2,3,n=3}, {"a","b",n=2}, true ) )
+
+
+print( "table.unpack() ..." )
+p( t1, 1, 1 )
+p( t2 )
+p( t3 )
+p( t4 )
+p( t5 )
 
 
 print( "table.concat() ..." )
@@ -30,80 +48,60 @@ print( table.concat( t4, ", " ) )
 print( "table.insert() ..." )
 table.insert( t2, 1 )
 table.insert( t2, 1, 2 )
-for i = 1, t2.n do
-  print( i, t2[ i ] )
-end
+p( t2 )
 table.insert( t3, 1 )
 table.insert( t3, 2, 2 )
-for i = 1, t3.n do
-  print( i, t3[ i ] )
-end
+p( t3 )
 reset()
 
 
 print( "table.move() ..." )
 table.move( t1, 1, 1, 2 )
-for i = 1, 2 do
-  print( i, t1[ i ] )
-end
+p( t1, 1, 2 )
 table.move( t2, 1, 3, 4 )
-for i = 1, t2.n do
-  print( i, t2[ i ] )
-end
+p( t2 )
 table.move( t3, 1, 1, 4 )
-for i = 1, t3.n do
-  print( i, t3[ i ] )
-end
+p( t3 )
 table.move( t5, 2, 4, 3 )
-for i = 1, t5.n do
-  print( i, t5[ i ] )
-end
+p( t5 )
 reset()
 
 
 print( "table.remove() ..." )
 table.remove( t2 )
-for i = 1, t2.n do
-  print( i, t2[ i ] )
-end
+p( t2 )
 table.remove( t2, 1 )
-for i = 1, t2.n do
-  print( i, t2[ i ] )
-end
+p( t2 )
 table.remove( t3 )
 table.remove( t3, 1 )
-for i = 1, t3.n do
-  print( i, t3[ i ] )
-end
+p( t3 )
 table.remove( t5 )
 table.remove( t5, 2 )
 table.remove( t5, 1 )
-for i = 1, t5.n do
-  print( i, t5[ i ] )
-end
+p( t5 )
 reset()
 
 
 print( "table.sort() ..." )
 table.sort( t2 )
-for i = 1, t2.n do
-  print( i, t2[ i ] )
-end
+p( t2 )
 table.sort( t3 )
-for i = 1, t3.n do
-  print( i, t3[ i ] )
-end
+p( t3 )
 table.sort( t5 )
-for i = 1, t5.n do
-  print( i, t5[ i ] )
-end
+p( t5 )
 reset()
 
 
-print( "table.unpack() ..." )
-print( table.unpack( t1, 1, 1 ) )
-print( table.unpack( t2 ) )
-print( table.unpack( t3 ) )
-print( table.unpack( t4 ) )
-print( table.unpack( t5 ) )
+print( "table.replace() ..." )
+p( table.replace( {1,2,3,4,n=4}, {"a","b","c",n=3} ) )
+p( table.replace( {1,2,3,4,n=4}, 2, 3, {"a","b","c","d"}, 2, 4 ) )
+p( table.replace( {1,2,3,4,n=4}, 2, 3, {"a","b","c"}, 3, 3 ) )
+p( table.replace( {1,2,3,4,5,n=5}, 2, 4, {"a","b"}, 1, 1 ) )
+p( table.replace( {1,2,3,4,n=4}, 2, 1, {"a","b","c"}, 3, 3 ) )
+p( table.replace( {1,2,3,4,n=4}, 1, 0, {"a","b","c",n=3} ) )
+p( table.replace( {1,2,3,4,n=4}, 1, 0, {"a","b",n=2} ) )
+p( table.replace( t3, 2, 1, t1, 1, 1 ) )
+p( table.replace( t4, 1, 1, t1, 1, 0 ) )
+p( table.replace( t5, 3, {"a","b",n=2} ) )
+reset()
 

@@ -473,6 +473,76 @@ static int sort (lua_State *L) {
 /* }====================================================== */
 
 
+
+static int treplace(lua_State *L) {
+  lua_Integer len, tpos, start, end, start2, end2, i;
+  len = aux_getn(L, 1, TAB_RW);
+  if (lua_type(L, 2) == LUA_TNUMBER) {
+    start = luaL_checkinteger(L, 2);
+    luaL_argcheck(L, start >= 1 && start <= len+1, 2,
+                  "index out of bounds");
+    if (lua_type(L, 3) == LUA_TNUMBER) {
+      end = luaL_checkinteger(L, 3);
+      luaL_argcheck(L, end >= start-1 && end <= len, 3,
+                    "invalid end index");
+      tpos = 4;
+    } else {
+      end = start;
+      if (end > len)
+        end = len;
+      tpos = 3;
+    }
+  } else {
+    start = len+1;
+    end = len;
+    tpos = 2;
+  }
+  checktab(L, tpos, TAB_R);
+  start2 = luaL_optinteger(L, tpos+1, 1);
+  end2 = luaL_opt(L, luaL_checkinteger, tpos+2, check_n(L, tpos));
+  luaL_argcheck(L, end2 >= start2-1, tpos+2, "invalid end index");
+  if (end2-start2 > end-start) { /* array needs to grow */
+    lua_pushinteger(L, len+end2-start2-end+start);
+    lua_setfield(L, 1, "n");  /* t.n = number of elements */
+  }
+  if (start <= len) { /* replace values */
+    lua_Integer shift = end2-start2-end+start;
+    if (shift < 0) { /* shift to left */
+      for (i = end+1; i <= len; ++i) {
+        lua_geti(L, 1, i);
+        lua_seti(L, 1, i+shift);
+      }
+      for (i = len; i > len+shift; --i) {
+        lua_pushnil(L);
+        lua_seti(L, 1, i);
+      }
+    } else if (shift != 0) { /* shift to right */
+      for (i = len-shift+1; i <= len; ++i) {
+        lua_geti(L, 1, i);
+        lua_seti(L, 1, i+shift);
+      }
+      for (i = len-shift; i > end; --i) {
+        lua_geti(L, 1, i);
+        lua_seti(L, 1, i+shift);
+      }
+    }
+  }
+  /* copy from list2 to list1 */
+  for (i = start2; i <= end2; ++i) {
+    lua_geti(L, tpos, i);
+    lua_seti(L, 1, start+i-start2);
+  }
+  lua_settop(L, 1);
+  /* array must shrink */
+  if (end2-start2 < end-start) {
+    lua_pushinteger(L, len+end2-start2-end+start);
+    lua_setfield(L, 1, "n");  /* t.n = number of elements */
+  }
+  return 1;
+}
+
+
+
 static const luaL_Reg tab_funcs[] = {
   {"concat", tconcat},
 #if defined(LUA_COMPAT_MAXN)
@@ -484,6 +554,7 @@ static const luaL_Reg tab_funcs[] = {
   {"remove", tremove},
   {"move", tmove},
   {"sort", sort},
+  {"replace", treplace},
   {NULL, NULL}
 };
 
