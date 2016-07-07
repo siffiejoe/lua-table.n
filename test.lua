@@ -34,6 +34,7 @@ print( pcall( table.map, {}, {} ) )
 print( pcall( table.map, type, {} ) )
 print( pcall( table.filter, {}, {} ) )
 print( pcall( table.filter, type, {} ) )
+print( pcall( table.npairs, {} ) )
 
 
 print( "table.unpack() ..." )
@@ -130,4 +131,13 @@ p( table.filter( is_not, t3, nil ) )
 p( table.filter( is_nil, t5 ) )
 p( table.filter( is_not, t5, nil ) )
 p( table.filter( is_not, t5, 3 ) )
+
+
+print( "table.npairs() ..." )
+for i,v in table.npairs( t3 ) do
+  print( i, v )
+end
+for i,v in table.npairs( t5, 2 ) do
+  print( i, v )
+end
 

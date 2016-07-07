@@ -647,8 +647,32 @@ LUA_KFUNCTION(tfilterk) {
   return 1;
 }
 
-static int tfilter(lua_State *L) {
+static int tfilter (lua_State *L) {
   return tfilterk(L, 0, 0);
+}
+
+
+
+static int npairs_iterator (lua_State *L) {
+  lua_Integer n = aux_getn(L, 1, TAB_R);
+  lua_Integer i = luaL_checkinteger(L, 2);
+  if (i >= n)
+    return 0;
+  lua_pushinteger(L, ++i);
+  lua_pushvalue(L, -1);
+  lua_gettable(L, 1);
+  return 2;
+}
+
+
+static int npairs (lua_State *L) {
+  lua_Integer s;
+  (void)aux_getn(L, 1, TAB_R); /* check early */
+  s = luaL_optinteger(L, 2, 1);
+  lua_pushcfunction(L, npairs_iterator);
+  lua_pushvalue(L, 1);
+  lua_pushinteger(L, s-1);
+  return 3;
 }
 
 /* }====================================================== */
@@ -669,6 +693,7 @@ static const luaL_Reg tab_funcs[] = {
   {"replace", treplace},
   {"map", tmap},
   {"filter", tfilter},
+  {"npairs", npairs},
   {NULL, NULL}
 };
 
