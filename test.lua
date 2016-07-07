@@ -34,6 +34,9 @@ print( pcall( table.map, {}, {} ) )
 print( pcall( table.map, type, {} ) )
 print( pcall( table.filter, {}, {} ) )
 print( pcall( table.filter, type, {} ) )
+print( pcall( table.zip, {}, {} ) )
+print( pcall( table.zip, type, {} ) )
+print( pcall( table.zip, type, {n=0}, {} ) )
 print( pcall( table.npairs, {} ) )
 
 
@@ -131,6 +134,28 @@ p( table.filter( is_not, t3, nil ) )
 p( table.filter( is_nil, t5 ) )
 p( table.filter( is_not, t5, nil ) )
 p( table.filter( is_not, t5, 3 ) )
+
+
+print( "table.zip() ..." )
+local function is_nil( v )
+  if v == nil then return nil end
+end
+local function is_not_nil( v )
+  if v ~= nil then return v end
+end
+p( table.zip( is_nil, t3 ) )
+p( table.zip( is_not_nil, t3 ) )
+p( table.zip( is_not_nil, t5 ) )
+p( table.zip( type, t3 ) )
+p( table.zip( type, t4 ) )
+p( table.zip( type, t5 ) )
+local function add( a ) return a+3 end
+p( table.zip( add, {1,2,3,4,n=3} ) )
+local x = table.zip( nil, t5, t3 )
+for i = 1, x.n do
+  io.write( i, "\t" )
+  p( x[ i ] )
+end
 
 
 print( "table.npairs() ..." )

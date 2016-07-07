@@ -568,7 +568,8 @@ static void check_callable(lua_State *L, int idx) {
 
 
 LUA_KFUNCTION(tmapk) {
-  int nx = 0, i = 1, j = 1, len;
+  lua_Integer i = 1, len;
+  int j, nx;
   (void)status;
   switch (ctx) {
     case 0:
@@ -606,7 +607,8 @@ static int tmap (lua_State *L) {
 
 
 LUA_KFUNCTION(tfilterk) {
-  int nx = 0, i = 1, j = 1, len;
+  lua_Integer i = 1, j = 1, len;
+  int k, nx;
   (void)status;
   switch (ctx) {
     case 0:
@@ -623,8 +625,8 @@ LUA_KFUNCTION(tfilterk) {
         lua_gettable(L, 2);
         lua_pushvalue(L, 1);
         lua_pushvalue(L, -2);
-        for (j = 3; j <= nx+2; ++j)
-          lua_pushvalue(L, j);
+        for (k = 3; k <= nx+2; ++k)
+          lua_pushvalue(L, k);
         lua_callk(L, nx+1, 1, 1, tfilterk);
     case 1: /* pred, array, x_1, ..., x_n, i, j, len, res, v, r */
         nx = lua_gettop(L)-8;
@@ -651,6 +653,78 @@ static int tfilter (lua_State *L) {
   return tfilterk(L, 0, 0);
 }
 
+
+static int zipper (lua_State *L) {
+  int i = 1, top = lua_gettop(L);
+  lua_createtable(L, top, 1);
+  lua_pushinteger(L, top);
+  lua_setfield(L, -2, "n");
+  for (i = 1; i <= top; ++i) {
+    lua_pushvalue(L, i);
+    lua_rawseti(L, -2, i);
+  }
+  return 1;
+}
+
+
+LUA_KFUNCTION(tzipk) {
+  lua_Integer i = 1, j = 1, len;
+  int k, n, top;
+  (void)status;
+  switch (ctx) {
+    case 0:
+      if (lua_isnoneornil(L, 1)) {
+        lua_pushcfunction(L, zipper);
+        lua_replace(L, 1);
+      } else
+        check_callable(L, 1);
+      n = lua_gettop(L)-1;
+      len = aux_getn(L, 2, TAB_R);
+      for (k = 3; k <= n+1; ++k) {
+        lua_Integer l = aux_getn(L, k, TAB_R);
+        if (l < len)
+          len = l;
+      }
+      lua_pushinteger(L, n); /* store number of arrays */
+      lua_insert(L, 2);
+      lua_pushinteger(L, 1); /* store current iteration index */
+      lua_pushvalue(L, -1); /* store current target index */
+      lua_pushinteger(L, len); /* store length on stack */
+      lua_createtable(L, 0, 1); /* result table */
+      luaL_checkstack(L, n+2+LUA_MINSTACK, "zip");
+      while (i <= len) { /* func, n, t_1, ..., t_n, i, j, len, rt */
+        lua_pushvalue(L, 1);
+        for (k = 3; k <= n+2; ++k) {
+          lua_pushvalue(L, n+3);
+          lua_gettable(L, k);
+        }
+        lua_callk(L, n, LUA_MULTRET, 1, tzipk);
+    case 1: /* func, n, t_1, ..., t_n, i, j, len, rt, r_1, ..., r_m */
+        n = lua_tointeger(L, 2);
+        i = lua_tointeger(L, n+3);
+        j = lua_tointeger(L, n+4);
+        len = lua_tointeger(L, n+5);
+        top = lua_gettop(L);
+        luaL_checkstack(L, 1, "zip");
+        for (k = n+7; k <= top; ++k) {
+          lua_pushvalue(L, k);
+          lua_rawseti(L, n+6, j++);
+        }
+        lua_settop(L, n+6); /* remove results r_1, ..., r_m */
+        lua_pushinteger(L, ++i);
+        lua_replace(L, n+3); /* update i */
+        lua_pushinteger(L, j);
+        lua_replace(L, n+4); /* update j */
+      }
+  }
+  lua_pushinteger(L, j-1);
+  lua_setfield(L, -2, "n");
+  return 1;
+}
+
+static int tzip (lua_State *L) {
+  return tzipk(L, 0, 0);
+}
 
 
 static int npairs_iterator (lua_State *L) {
@@ -693,6 +767,7 @@ static const luaL_Reg tab_funcs[] = {
   {"replace", treplace},
   {"map", tmap},
   {"filter", tfilter},
+  {"zip", tzip},
   {"npairs", npairs},
   {NULL, NULL}
 };
