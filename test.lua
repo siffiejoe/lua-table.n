@@ -125,6 +125,8 @@ p( table.zip( type, t4 ) )
 p( table.zip( type, t5 ) )
 local function add( a ) return a+3 end
 p( table.zip( add, {1,2,3,4,n=3} ) )
+local function id( ... ) return ...  end
+p( table.zip( id, t3, t5 ) )
 local x = table.zip( nil, t5, t3 )
 for i = 1, x.n do
   io.write( i, "\t" )
