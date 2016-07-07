@@ -567,93 +567,6 @@ static void check_callable(lua_State *L, int idx) {
 }
 
 
-LUA_KFUNCTION(tmapk) {
-  lua_Integer i = 1, len;
-  int j, nx;
-  (void)status;
-  switch (ctx) {
-    case 0:
-      check_callable(L, 1);
-      len = aux_getn(L, 2, TAB_R);
-      nx = lua_gettop(L)-2;
-      lua_pushinteger(L, 1); /* store current iteration index */
-      lua_pushinteger(L, len); /* store length on stack */
-      lua_createtable(L, len, 1); /* result table */
-      lua_pushvalue(L, -2);
-      lua_setfield(L, -2, "n"); /* ... with an 'n' field */
-      luaL_checkstack(L, nx+2+LUA_MINSTACK, "map");
-      while (i <= len) { /* func, array, x_1, ..., x_n, i, len, res */
-        lua_pushvalue(L, 1);
-        lua_pushvalue(L, -4);
-        lua_gettable(L, 2);
-        for (j = 3; j <= nx+2; ++j)
-          lua_pushvalue(L, j);
-        lua_callk(L, nx+1, 1, 1, tmapk);
-    case 1: /* func, array, x_1, ..., x_n, i, len, res, v */
-        nx = lua_gettop(L)-6;
-        i = lua_tointeger(L, nx+3);
-        len = lua_tointeger(L, nx+4);
-        lua_rawseti(L, nx+5, i);
-        lua_pushinteger(L, ++i);
-        lua_replace(L, nx+3); /* update i */
-      }
-  }
-  return 1;
-}
-
-static int tmap (lua_State *L) {
-  return tmapk(L, 0, 0);
-}
-
-
-LUA_KFUNCTION(tfilterk) {
-  lua_Integer i = 1, j = 1, len;
-  int k, nx;
-  (void)status;
-  switch (ctx) {
-    case 0:
-      check_callable(L, 1);
-      len = aux_getn(L, 2, TAB_R);
-      nx = lua_gettop(L)-2;
-      lua_pushinteger(L, 1); /* store current iteration index */
-      lua_pushvalue(L, -1); /* store current target index */
-      lua_pushinteger(L, len); /* store length on stack */
-      lua_createtable(L, 0, 1); /* result table */
-      luaL_checkstack(L, nx+3+LUA_MINSTACK, "filter");
-      while (i <= len) { /* pred, array, x_1, ..., x_n, i, j, len, res */
-        lua_pushvalue(L, -4);
-        lua_gettable(L, 2);
-        lua_pushvalue(L, 1);
-        lua_pushvalue(L, -2);
-        for (k = 3; k <= nx+2; ++k)
-          lua_pushvalue(L, k);
-        lua_callk(L, nx+1, 1, 1, tfilterk);
-    case 1: /* pred, array, x_1, ..., x_n, i, j, len, res, v, r */
-        nx = lua_gettop(L)-8;
-        i = lua_tointeger(L, nx+3);
-        j = lua_tointeger(L, nx+4);
-        len = lua_tointeger(L, nx+5);
-        if (lua_toboolean(L, -1)) {
-          lua_pop(L, 1);
-          lua_rawseti(L, nx+6, j);
-          lua_pushinteger(L, ++j);
-          lua_replace(L, nx+4); /* update j */
-        } else
-          lua_pop(L, 2);
-        lua_pushinteger(L, ++i);
-        lua_replace(L, nx+3); /* update i */
-      }
-  }
-  lua_pushinteger(L, j-1);
-  lua_setfield(L, -2, "n");
-  return 1;
-}
-
-static int tfilter (lua_State *L) {
-  return tfilterk(L, 0, 0);
-}
-
-
 static int zipper (lua_State *L) {
   int i = 1, top = lua_gettop(L);
   lua_createtable(L, top, 1);
@@ -765,8 +678,6 @@ static const luaL_Reg tab_funcs[] = {
   {"move", tmove},
   {"sort", sort},
   {"replace", treplace},
-  {"map", tmap},
-  {"filter", tfilter},
   {"zip", tzip},
   {"npairs", npairs},
   {NULL, NULL}
