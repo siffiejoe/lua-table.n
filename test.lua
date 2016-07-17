@@ -34,6 +34,8 @@ print( pcall( table.zip, {}, {} ) )
 print( pcall( table.zip, type, {} ) )
 print( pcall( table.zip, type, {n=0}, {} ) )
 print( pcall( table.npairs, {} ) )
+print( pcall( table.reverse, {} ) )
+print( pcall( table.rotate, {}, 1 ) )
 
 
 print( "table.unpack() ..." )
@@ -141,4 +143,28 @@ end
 for i,v in table.npairs( t5, 2 ) do
   print( i, v )
 end
+
+
+print( "table.reverse() ..." )
+t1[ 2 ] = 2
+table.reverse( t1, 1, 2 )
+p( t1, 1, 2 )
+table.reverse( t5, 2, 7 )
+p( t5 )
+reset()
+table.reverse( t5 )
+p( t5 )
+reset()
+
+
+print( "table.rotate() ..." )
+t1[ 2 ] = 2
+table.rotate( t1, 3, 1, 2 )
+p( t1, 1, 2 )
+table.rotate( t5, 3, 2, 7 )
+p( t5 )
+reset()
+table.rotate( t5, -1 )
+p( t5 )
+reset()
 

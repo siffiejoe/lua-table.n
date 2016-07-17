@@ -662,6 +662,48 @@ static int npairs (lua_State *L) {
   return 3;
 }
 
+
+static void reverse (lua_State *L, lua_Integer a, lua_Integer b ) {
+  for( ; a < b; ++a, --b ) {
+    lua_geti( L, -1, a );
+    lua_geti( L, -2, b );
+    lua_seti( L, -3, a );
+    lua_seti( L, -2, b );
+  }
+}
+
+
+static int treverse (lua_State *L) {
+  lua_Integer begin, end;
+  checktab(L, 1, TAB_RW);
+  begin = luaL_optinteger(L, 2, 1);
+  end = luaL_opt(L, luaL_checkinteger, 3, check_n(L, 1));
+  lua_settop(L, 1);
+  reverse(L, begin, end);
+  return 0;
+}
+
+
+static int trotate (lua_State *L) {
+  lua_Integer n, begin, end;
+  checktab(L, 1, TAB_RW);
+  n = -luaL_checkinteger(L, 2);
+  begin = luaL_optinteger(L, 3, 1);
+  end = luaL_opt(L, luaL_checkinteger, 4, check_n(L, 1));
+  if (end > begin) {
+    n %= end - begin + 1;
+    if (n < 0)
+      n += end - begin + 1;
+    if (n != 0) {
+      lua_settop(L, 1);
+      reverse(L, begin, begin+n-1);
+      reverse(L, begin+n, end);
+      reverse(L, begin, end);
+    }
+  }
+  return 0;
+}
+
 /* }====================================================== */
 
 
@@ -680,6 +722,8 @@ static const luaL_Reg tab_funcs[] = {
   {"replace", treplace},
   {"zip", tzip},
   {"npairs", npairs},
+  {"reverse", treverse},
+  {"rotate", trotate},
   {NULL, NULL}
 };
 
@@ -694,6 +738,9 @@ static const luaL_Reg tab_funcs[] = {
 
 TABLE_N_API int luaopen_table_n (lua_State *L) {
   luaL_newlib(L, tab_funcs);
+  /* _G.npairs = table.npairs */
+  lua_getfield(L, -1, "npairs");
+  lua_setglobal(L, "npairs");
   return 1;
 }
 
