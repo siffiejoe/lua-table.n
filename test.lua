@@ -100,16 +100,33 @@ reset()
 
 
 print( "table.replace() ..." )
-p( table.replace( {1,2,3,4,n=4}, {"a","b","c",n=3} ) )
-p( table.replace( {1,2,3,4,n=4}, 2, 3, {"a","b","c","d"}, 2, 4 ) )
-p( table.replace( {1,2,3,4,n=4}, 2, 3, {"a","b","c"}, 3, 3 ) )
-p( table.replace( {1,2,3,4,5,n=5}, 2, 4, {"a","b"}, 1, 1 ) )
-p( table.replace( {1,2,3,4,n=4}, 2, 1, {"a","b","c"}, 3, 3 ) )
-p( table.replace( {1,2,3,4,n=4}, 1, 0, {"a","b","c",n=3} ) )
-p( table.replace( {1,2,3,4,n=4}, 1, 0, {"a","b",n=2} ) )
-p( table.replace( t3, 2, 1, t1, 1, 1 ) )
-p( table.replace( t4, 1, 1, t1, 1, 0 ) )
-p( table.replace( t5, 3, {"a","b",n=2} ) )
+local t = {1,2,3,4,n=4}
+table.replace( t, {"a","b","c",n=3} )
+p( t )
+t = {1,2,3,4,n=4}
+table.replace( t, 2, 3, {"a","b","c","d"}, 2, 4 )
+p( t )
+t = {1,2,3,4,n=4}
+table.replace( t, 2, 3, {"a","b","c"}, 3, 3 )
+p( t )
+t = {1,2,3,4,5,n=5}
+table.replace( t, 2, 4, {"a","b"}, 1, 1 )
+p( t )
+t = {1,2,3,4,n=4}
+table.replace( t, 2, 1, {"a","b","c"}, 3, 3 )
+p( t )
+t = {1,2,3,4,n=4}
+table.replace( t, 1, 0, {"a","b","c",n=3} )
+p( t )
+t = {1,2,3,4,n=4}
+table.replace( t, 1, 0, {"a","b",n=2} )
+p( t )
+table.replace( t3, 2, 1, t1, 1, 1 )
+p( t3 )
+table.replace( t4, 1, 1, t1, 1, 0 )
+p( t4 )
+table.replace( t5, 3, {"a","b",n=2} )
+p( t5 )
 reset()
 
 

@@ -539,13 +539,12 @@ static int treplace(lua_State *L) {
     lua_geti(L, tpos, i);
     lua_seti(L, 1, start+i-start2);
   }
-  lua_settop(L, 1);
   /* array must shrink */
   if (end2-start2 < end-start) {
     lua_pushinteger(L, len+end2-start2-end+start);
     lua_setfield(L, 1, "n");  /* t.n = number of elements */
   }
-  return 1;
+  return 0;
 }
 
 
