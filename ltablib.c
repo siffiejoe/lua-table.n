@@ -704,6 +704,40 @@ static int trotate (lua_State *L) {
   return 0;
 }
 
+
+/* try to guess which PRNG Lua uses */
+#if !defined(l_rand)
+#if defined(unix) || defined(__unix) || defined(__unix__) || \
+    (defined(__APPLE__) && defined(__MACH__)) || \
+    HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if defined(_POSIX_VERSION)
+#define l_rand()   random()
+#define L_RANDMAX  2147483647
+#else
+#define l_rand()   rand()
+#define L_RANDMAX  RAND_MAX
+#endif
+#endif
+
+static int tshuffle (lua_State *L) {
+  lua_Integer begin, end;
+  checktab(L, 1, TAB_RW);
+  begin = luaL_optinteger(L, 2, 1);
+  end = luaL_opt(L, luaL_checkinteger, 3, check_n(L, 1));
+  while (end >= begin) {
+    double f = l_rand() * (1.0/(L_RANDMAX+1.0));
+    lua_Integer j = begin + (lua_Integer)(f * (end-begin+1));
+    lua_geti(L, 1, end);
+    lua_geti(L, 1, j);
+    lua_seti(L, 1, end);
+    lua_seti(L, 1, j);
+    --end;
+  }
+  return 0;
+}
+
 /* }====================================================== */
 
 
@@ -724,6 +758,7 @@ static const luaL_Reg tab_funcs[] = {
   {"npairs", npairs},
   {"reverse", treverse},
   {"rotate", trotate},
+  {"shuffle", tshuffle},
   {NULL, NULL}
 };
 
