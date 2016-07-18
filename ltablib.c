@@ -566,19 +566,6 @@ static void check_callable(lua_State *L, int idx) {
 }
 
 
-static int zipper (lua_State *L) {
-  int i = 1, top = lua_gettop(L);
-  lua_createtable(L, top, 1);
-  lua_pushinteger(L, top);
-  lua_setfield(L, -2, "n");
-  for (i = 1; i <= top; ++i) {
-    lua_pushvalue(L, i);
-    lua_rawseti(L, -2, i);
-  }
-  return 1;
-}
-
-
 LUA_KFUNCTION(tzipk) {
   lua_Integer i = 1, j = 1, len;
   int k, n, top;
@@ -586,7 +573,7 @@ LUA_KFUNCTION(tzipk) {
   switch (ctx) {
     case 0:
       if (lua_isnoneornil(L, 1)) {
-        lua_pushcfunction(L, zipper);
+        lua_pushcfunction(L, pack);
         lua_replace(L, 1);
       } else
         check_callable(L, 1);
