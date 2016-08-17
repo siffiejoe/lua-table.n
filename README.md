@@ -38,26 +38,32 @@ that are not part of the original `table` standard library.
     behavior of the `zip` function known from other programming
     languages:
 
-        table.zip( nil, { 1, 2, 3, n=3 }, { "a", "b", "c", n=3 } )
-        --> { { 1, "a", n=2 }, { 2, "b", n=2 }, { 3, "c", n=2 }, n=3 }
+    ```lua
+    table.zip( nil, { 1, 2, 3, n=3 }, { "a", "b", "c", n=3 } )
+    --> { { 1, "a", n=2 }, { 2, "b", n=2 }, { 3, "c", n=2 }, n=3 }
+    ```
 
     However, with a suitable choice of `f` you can for instance
     interleave values
 
-        local function id( ... ) return ... end
-        table.zip( id, { 1, 2, 3, n=3 }, { "a", "b", "c", n=3 } )
-        --> { 1, "a", 2, "b", 3, "c", n=6 }
+    ```lua
+    local function id( ... ) return ... end
+    table.zip( id, { 1, 2, 3, n=3 }, { "a", "b", "c", n=3 } )
+    --> { 1, "a", 2, "b", 3, "c", n=6 }
+    ```
 
     or emulate the well-known `map` or `filter` functions:
 
-        local function plus3( a ) return a + 3 end
-        table.zip( plus3, { 1, 2, 3, n=3 } )
-        --> { 4, 5, 6, n=3 }
-        local function not_nil( a )
-          if a ~= nil then return a end
-        end
-        table.zip( not_nil, { 1, nil, 2, 3, nil, 4, n=6 } )
-        --> { 1, 2, 3, 4, n=4 }
+    ```lua
+    local function plus3( a ) return a + 3 end
+    table.zip( plus3, { 1, 2, 3, n=3 } )
+    --> { 4, 5, 6, n=3 }
+    local function not_nil( a )
+      if a ~= nil then return a end
+    end
+    table.zip( not_nil, { 1, nil, 2, 3, nil, 4, n=6 } )
+    --> { 1, 2, 3, 4, n=4 }
+    ```
 
 *   `table.npairs(t [, i])` (or `npairs(t [, i])`)
 
