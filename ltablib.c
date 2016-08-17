@@ -481,7 +481,7 @@ static int sort (lua_State *L) {
 ** =======================================================
 */
 
-static int treplace(lua_State *L) {
+static int treplace (lua_State *L) {
   lua_Integer len, tpos, start, end, start2, end2, i;
   len = aux_getn(L, 1, TAB_RW);
   if (lua_type(L, 2) == LUA_TNUMBER) {
@@ -548,7 +548,7 @@ static int treplace(lua_State *L) {
 }
 
 
-static void check_callable(lua_State *L, int idx) {
+static void check_callable (lua_State *L, int idx) {
   int c = 0;
   switch (lua_type(L, idx)) {
     case LUA_TFUNCTION:
@@ -649,12 +649,12 @@ static int npairs (lua_State *L) {
 }
 
 
-static void reverse (lua_State *L, lua_Integer a, lua_Integer b ) {
-  for( ; a < b; ++a, --b ) {
-    lua_geti( L, -1, a );
-    lua_geti( L, -2, b );
-    lua_seti( L, -3, a );
-    lua_seti( L, -2, b );
+static void reverse (lua_State *L, lua_Integer a, lua_Integer b) {
+  for (; a < b; ++a, --b) {
+    lua_geti(L, -1, a);
+    lua_geti(L, -2, b);
+    lua_seti(L, -3, a);
+    lua_seti(L, -2, b);
   }
 }
 
